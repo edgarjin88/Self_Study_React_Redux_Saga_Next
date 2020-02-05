@@ -27,7 +27,7 @@ function* createUser(action){
     yield call(api.createUser, {firstName: action.payload.firstName, lastName: action.payload.lastName}); 
     yield call(getUsers); //refresh the user list again. 
   }catch(e){  
-    yield put(actions.usersError({
+    yield put(actions.usersError({  //all actions from * 
       error: 'An error occurred when trying to create a user. '
     }))
   }
