@@ -7,8 +7,8 @@ import "react-toastify/dist/ReactToastify.min.css";
 
 const Signin = () => {
   const [values, setValues] = useState({
-    email: "",
-    password: "",
+    email: process.env.REACT_APP_ID,
+    password: process.env.REACT_APP_PASSWORD,
     buttonText: "Submit"
   });
 
