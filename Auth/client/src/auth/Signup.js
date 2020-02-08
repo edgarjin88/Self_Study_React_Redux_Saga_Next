@@ -4,7 +4,7 @@ import Layout from '../core/Layout'
 import axios from 'axios'
 import {ToastContainer, toast} from 'react-toastify'; 
 import 'react-toastify/dist/ReactToastify.min.css'
-
+import { isAuth } from './Helpers';
 
 const Signup = () =>{
   const [values, setValues] = useState({
@@ -82,16 +82,16 @@ const Signup = () =>{
     </form>
   );
 
-  return(
+  return (
     <Layout>
       <div className="col-md-6 offset-md-3">
-
-      <ToastContainer/>
-      <h1 className="p-5 text-centered">Signup</h1>
-      {signupForm()}
+        {isAuth() ? <Redirect to="/" /> : null}
+        <ToastContainer />
+        <h1 className="p-5 text-centered">Signup</h1>
+        {signupForm()}
       </div>
     </Layout>
-  )
+  );
 }
 
 export default Signup; 

@@ -1,6 +1,11 @@
 const User = require('../models/user'); 
 const jwt = require('jsonwebtoken'); 
+const expressJWT = require('express-jwt')
 const nodemailer = require('nodemailer')
+require("dotenv").config();
+// without this, no .env would work. 
+
+
 // const sgMail = require('@sendgrid/mail'); 
 // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 // exports.signup =  (req, res)=>{
@@ -150,3 +155,16 @@ exports.signin = (req, res) =>{
     })
   })
 } 
+
+
+// exports.requireSignin = expressJWT({
+//   secret: process.env.JWT_SECRET //make the data available to req.user._id add the "user property" to req.
+
+// }) //if no userProperty, basic value is "user"
+
+exports.requireSignin = expressJWT({
+  secret: process.env.JWT_SECRET
+});
+
+//use sendgrid as well later. 
+//validate the token in "authorization" of header 

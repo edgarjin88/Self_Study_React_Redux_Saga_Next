@@ -4,8 +4,12 @@ import Layout from "../core/Layout";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
+import { authenticate, isAuth } from "./Helpers";
 
-const Signin = () => {
+
+const Signin = ({history}) => {
+  // as this component was wrapped with browser router, history props are provided. 
+
   const [values, setValues] = useState({
     email: process.env.REACT_APP_ID,
     password: process.env.REACT_APP_PASSWORD,
@@ -30,18 +34,25 @@ const Signin = () => {
 
       .then(response => {
         console.log("signup success ", response);
-        setValues({
-          ...values,
-          name: "",
-          email: "",
-          password: "",
-          buttonText: "Submitted"
-        });
-        toast.success(`Hey ${response.data.user.name}, Welcome back!`);
+        authenticate(response, ()=>{
+          setValues({
+            ...values,
+            name: "",
+            email: "",
+            password: "",
+            buttonText: "Submitted"
+          });
+          toast.success(
+            `Hey ${response.data.user.name}, Welcome back!`
+          );
+          isAuth() && isAuth().role === 'admin'
+          ? history.push('/admin')
+          : history.push('/private')
+        })
       })
       .catch(error => {
         console.log("error itself :", error);
-        console.log("Sign in error: ", error.response.data);
+        // console.log("Sign in error: ", error.response.data);
         // ??
         setValues({ ...values, buttonText: "Submit" });
         toast.error(error.response.data.error);
@@ -81,7 +92,9 @@ const Signin = () => {
   return (
     <Layout>
       <div className="col-md-6 offset-md-3">
+      {/* {JSON.stringify(isAuth())} */}
         <ToastContainer />
+        {isAuth() ? <Redirect to="/"/> : null}
         <h1 className="p-5 text-centered">Signin</h1>
         {signinForm()}
       </div>

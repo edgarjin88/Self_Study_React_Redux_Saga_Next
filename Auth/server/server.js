@@ -5,6 +5,7 @@ const cors = require('cors')
 const bodyParser = require('body-parser') //without body parser, JSON data is not parsed into JS. 
 const mongoose = require('mongoose')
 const authRoutes = require('./routes/auth')
+const userRoutes = require('./routes/user')
 
 require('dotenv').config()
 // DATABASE='mongodb://localhost:27017/auth'
@@ -28,6 +29,8 @@ if(process.env.NODE_ENV="development"){
   app.use(cors({origin: `http://localhost:3000`}))
 }
 app.use('/api', authRoutes)
+app.use("/api", userRoutes);
+// in this case, each request go through all routes until it reaches to the right one. not a good way. 
 
 const port = process.env.PORT || 8000
 

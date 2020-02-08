@@ -1,6 +1,6 @@
 import React from 'react';
 import {Link, withRouter} from 'react-router-dom'
-
+import { isAuth, signout } from '../auth/Helpers';
 
 const Layout = ({children, match, history})=>{
   // withRouter gives history props, list of history where been to. 
@@ -22,25 +22,62 @@ const Layout = ({children, match, history})=>{
         </Link>
       </li>
 
-      <li className="nav-item">
-        <Link
-          style={isActive("/signin")}
-          to="/signin"
-          className=" nav-link"
-        >
-          Signin
-        </Link>
-      </li>
+      {!isAuth() && (
+        <>
+          {/* this is the case where I need fragment */}
+          <li className="nav-item">
+            <Link
+              style={isActive("/signin")}
+              to="/signin"
+              className=" nav-link"
+            >
+              Signin
+            </Link>
+          </li>
 
-      <li className="nav-item">
-        <Link
-          style={isActive("/signup")}
-          to="/signup"
-          className=" nav-link"
-        >
-          Signup
-        </Link>
-      </li>
+          <li className="nav-item">
+            <Link
+              style={isActive("/signup")}
+              to="/signup"
+              className=" nav-link"
+            >
+              Signup
+            </Link>
+          </li>
+        </>
+      )}
+
+      {isAuth() && isAuth().role === "admin" && (
+        <li className="nav-item">
+          <Link to="/admin" className="nav-link" style={isActive("/admin")}>
+            {isAuth().name}
+          </Link>
+        </li>
+      )}
+
+      {isAuth() && isAuth().role === "subscriber" && (
+        <li className="nav-item">
+          <Link to="/private" className="nav-link" style={isActive("/private")}>
+            {isAuth().name}
+          </Link>
+        </li>
+      )}
+
+      {isAuth() && (
+        <li className="nav-item">
+          <span
+            className="nav-link"
+            style={{ cursor: "pointer", color: "#fff" }}
+            onClick={() => {
+              signout(() => {
+                history.push("/"); // callback function in signout function
+              });
+            }}
+          >
+            Signout
+          </span>
+        </li>
+      )}
     </ul>
   );
   return (
