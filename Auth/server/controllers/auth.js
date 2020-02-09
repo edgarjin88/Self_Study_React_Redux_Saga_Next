@@ -164,7 +164,29 @@ exports.signin = (req, res) =>{
 
 exports.requireSignin = expressJWT({
   secret: process.env.JWT_SECRET
-});
+})  //this part just add req.user only
 
 //use sendgrid as well later. 
 //validate the token in "authorization" of header 
+
+
+exports.adminMiddleware = (req, res, next)=>{
+    User.findById({_id: req.user._id}).exec((err, user)=>{
+      console.log('user  found :', user);
+      if(err || !user){
+      return res.status(400).json({
+        error: 'User not found'
+      })
+    }
+    if(user.role !== 'admin'){
+      return res.status(400).json({
+        error: 'Admin resource. Access denied'
+      })
+    }
+
+    req.profile = user
+    // console.log('req profile: ', req.profile);
+    next(); 
+})
+
+}
