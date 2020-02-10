@@ -4,7 +4,7 @@ import Layout from "../core/Layout";
 import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
-import { isAuth, getCookie, signout } from "../auth/Helpers";
+import { isAuth, getCookie, signout, updateUser } from "../auth/Helpers";
 
 const Private = ({history}) => {
   const [values, setValues] = useState({
@@ -37,7 +37,7 @@ const Private = ({history}) => {
       console.log('profile update error', error)
       if(error.response.status === 401){
         signout(()=>{
-          history.push('/')
+          history.push('/') //callback
         })
       }
     })
@@ -52,24 +52,27 @@ const Private = ({history}) => {
     e.preventDefault();
     setValues({ ...values, buttonText: "Submitting" });
     axios({
-      method: "POST",
-      url: `${process.env.REACT_APP_API}/signup`,
-      data: { name, email, password }
+      method: "PUT",
+      url: `${process.env.REACT_APP_API}/user/update`,
+      data: { name, password },
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
     })
       .then(response => {
-        console.log("signup success ", response);
-        setValues({
-          ...values,
-          name: "",
-          email: "",
-          password: "",
-          buttonText: "Submitted"
-        });
-        toast.success(response.data.message);
+        console.log("profile update success ", response);
+        updateUser(response, ()=>{
+
+                  setValues({
+                    ...values,
+                    buttonText: "Submitted"
+                  });
+        })
+
+        toast.success("Profile Updated Successfully");
       })
       .catch(error => {
-        console.log("error itself :", error);
-        console.log("Sign up error: ", error.response.data);
+        console.log("profile update error: ", error.response.data.error);
         // ??
         setValues({ ...values, buttonText: "Submit" });
         toast.error(error.response.data.error);

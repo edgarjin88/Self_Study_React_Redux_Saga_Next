@@ -2,6 +2,7 @@ const User = require('../models/user');
 const jwt = require('jsonwebtoken'); 
 const expressJWT = require('express-jwt')
 const nodemailer = require('nodemailer')
+const _ =require('lodash')
 require("dotenv").config();
 // without this, no .env would work. 
 
@@ -188,5 +189,119 @@ exports.adminMiddleware = (req, res, next)=>{
     // console.log('req profile: ', req.profile);
     next(); 
 })
+
+}
+
+
+///forgot password
+exports.forgotPassword = (req, res) => {
+  const { email } = req.body;
+
+  User.findOne({ email }, (err, user) => {
+    if (err || !user) {
+      return res.status(400).json({
+        error: "User with that email does not exist"
+      });
+    }
+    const token = jwt.sign( //create token
+      { _id: user._id, name: user.name },
+      process.env.JWT_RESET_PASSWORD,
+      { expiresIn: "10m" } // because it is only for email verification.
+    );
+
+    let transporter = nodemailer.createTransport({
+      service: "naver",
+      host: "smtp.naver.com",
+      secure: false, // true for 465, false for other ports
+      auth: {
+        user: process.env.MAIL_USERNAME, // generated ethereal user
+        pass: process.env.MAIL_PASSWORD // generated ethereal password
+      }
+    });
+
+    // console.log("test :", email, password, name);
+    let emailData = {
+      // from: process.env.EMAIL_FROM,
+      from: process.env.MAIL_USERNAME,
+      to: email,
+      subject: "Reset Password",
+      html: `
+      <h2>Please use the following link to reset your password</h2>
+      <a href="${process.env.CLIENT_URL}/auth/password/reset/${token}">${process.env.CLIENT_URL}/auth/password/reset/${token}</a>
+      <hr/>
+      <p>This email may contain sensetive information</p>
+      <p>${process.env.CLIENT_URL} 'what is this?' </p>
+      `
+    };
+
+    return user.updateOne({resetPassword:token}, (err, success)=>{
+      if(err){
+        console.log('Resetp password link error', err);
+        return res.status(400).json({
+          error:'Database connection error on user password forgot request'
+        })
+      }else{
+        transporter
+          .sendMail(emailData)
+          .then(sent => {
+            // console.log('SIGNUP EMAIL SENT', sent);
+            return res.json({
+              message: `Email has been sent to ${email}. Follow the instruction to activate your account`
+            });
+          })
+          .catch(err => {
+            // console.log('SIGNUP EMAIL SENT ERROR', err);
+            console.log("err :", err);
+            return res.json({ message: err.message });
+          })
+        }
+    })
+  })
+}
+
+
+exports.resetPassword = (req, res)=>{
+
+  const {resetPasswordLink, newPassword} = req.body;
+
+  if(resetPasswordLink){
+    jwt.verify(resetPasswordLink, process.env.JWT_RESET_PASSWORD, function(err, decoded){
+      if(err){
+        return res.status(400).json({
+          error: 'Expired link. Try again'
+        })
+      }
+      console.log('decoded :', decoded);
+      
+      // User.findOne({resetPasswordLink}, (err, user)=>{ //  original code 
+      User.findOne({_id: decoded._id}, (err, user)=>{
+        if(err ||!user){
+          console.log('user: ', user);
+          console.log('err: ', err);
+          return res.status(400).json({
+            error: 'Something went wrong. Try again'
+          }); 
+        }
+
+        const updatedFields = {
+          password: newPassword, 
+          resetPasswordLink: ''
+        }
+
+        user = _.extend(user, updatedFields )
+        user.save((err, result)=>{
+          if(err){
+            return res.status(400).json({
+              error: 'Error resetting user password'
+            })
+          }
+
+          res.json({
+            message: "Great! You can log in with new passowrd"
+          })
+        })
+      })
+    })
+  }
 
 }

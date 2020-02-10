@@ -1,12 +1,17 @@
 const express = require('express'); 
 const router = express.Router()
-const { signup, signin, accountActivation } = require("../controllers/auth");
+const { signup, signin, accountActivation, forgotPassword, resetPassword } = require("../controllers/auth");
 
-
+ 
 const {
   userSignupValidator,
-  userSignInValidator
+  userSignInValidator,
+  forgotPasswordValidator,
+  resetPasswordValidator
 } = require("../validators/auth"); // just array of check result. 
+
+
+
 const {runValidataion} = require('../validators') // actuall Middleware. 
 
 router.post('/signup', userSignupValidator, runValidataion, signup); // without correct order, validation would not work. 
@@ -14,4 +19,9 @@ router.post('/signup', userSignupValidator, runValidataion, signup); // without 
 
 router.post("/account-activation", accountActivation);
 router.post("/signin", userSignInValidator, runValidataion, signin);
+
+//forgot reset password
+router.put("/forgot-password", forgotPasswordValidator, runValidataion, forgotPassword)
+router.put("/reset-password", resetPasswordValidator, runValidataion, resetPassword)
+
 module.exports = router
