@@ -3,6 +3,7 @@ const jwt = require('jsonwebtoken');
 const expressJWT = require('express-jwt')
 const nodemailer = require('nodemailer')
 const _ =require('lodash')
+const {OAuth2Client} = require('google-auth-library')
 require("dotenv").config();
 // without this, no .env would work. 
 
@@ -304,4 +305,50 @@ exports.resetPassword = (req, res)=>{
     })
   }
 
+}
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+exports.googleLogin = (req, res) =>{
+  const {idToken} = req.body
+
+  client.verifyIdToken({idToken, audience: process.env.GOOGLE_CLIENT_ID}) //idToken from client side 
+  .then(response =>{
+    console.log(' google login res :', response);
+    const {email_verified, name, email} = response.payload
+    if(email_verified){
+      User.findOne({email}).exec((err, user)=>{
+        if(user){
+          const token = jwt.sign({_id: user._id}, process.env.JWT_SECRET, {expiresIn: '7d'})
+          const {_id, email, name, role} = user
+          return res.json({ token, user: { _id, email, name, role } });
+   
+        }else{
+          let password = email + process.env.JWT_SECRET // password patern
+          user = new User({name, email, password})
+          user.save((err, data)=>{
+            if(err){
+              console.log('error gogle login on user save :', err);
+              return res.status(400).json({
+                error: 'User sign up failed with google'
+              })
+            }else{
+
+          const token = jwt.sign({_id: data._id}, process.env.JWT_SECRET, {expiresIn: '7d'})
+          const {_id, email, name, role} = user
+          console.log('user info :', user);
+          return res.json({
+            token,
+            user:  {_id, email, name, role } // key=valu
+          });
+
+            }
+          })
+        }
+      })
+    }else{ //email is not verified
+      return res.status(400).json({
+        error: "Google login failed. Email not verified"
+      });
+    }
+  })
 }

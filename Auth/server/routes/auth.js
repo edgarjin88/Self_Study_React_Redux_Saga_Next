@@ -1,6 +1,6 @@
 const express = require('express'); 
 const router = express.Router()
-const { signup, signin, accountActivation, forgotPassword, resetPassword } = require("../controllers/auth");
+const { signup, signin, accountActivation, forgotPassword, resetPassword, googleLogin } = require("../controllers/auth");
 
  
 const {
@@ -23,5 +23,6 @@ router.post("/signin", userSignInValidator, runValidataion, signin);
 //forgot reset password
 router.put("/forgot-password", forgotPasswordValidator, runValidataion, forgotPassword)
 router.put("/reset-password", resetPasswordValidator, runValidataion, resetPassword)
+router.post("/google-login", googleLogin)
 
 module.exports = router
