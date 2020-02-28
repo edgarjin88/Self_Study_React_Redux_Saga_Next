@@ -4,6 +4,7 @@ const expressJWT = require('express-jwt')
 const nodemailer = require('nodemailer')
 const _ =require('lodash')
 const {OAuth2Client} = require('google-auth-library')
+const fetch = require('node-fetch')
 require("dotenv").config();
 // without this, no .env would work. 
 
@@ -351,4 +352,60 @@ exports.googleLogin = (req, res) =>{
       });
     }
   })
+}
+
+
+exports.facebookLogin = (req, res) => {
+  console.log(req.body.response);
+  const { userID, accessToken } = req.body;
+
+  const url = `https://graph.facebook.com/v2.11/${userID}/?fields=id,name,email&access_token=${accessToken}`
+
+  return fetch(url, { method: "GET" })
+  .then(response => response.json())
+  .then(response =>{
+    const {email, name} = response
+    User.findOne({email}).exec((err, user)=>{
+      if(user){
+                  const token = jwt.sign(
+                    { _id: data._id },
+                    process.env.JWT_SECRET,
+                    { expiresIn: "7d" }
+                  );
+                  const { _id, email, name, role } = user;
+                  console.log("user info :", user);
+                  return res.json({
+                    token,
+                    user: { _id, email, name, role } // key=valu
+                  });
+      } else {
+        let password = email + process.env.JWT_SECRET // password patern
+          user = new User({name, email, password})
+          user.save((err, data)=>{
+            if(err){
+              console.log('error facebook login on user save :', err);
+              return res.status(400).json({
+                error: 'User sign up failed with google'
+              })
+            }
+
+          const token = jwt.sign({_id: data._id}, process.env.JWT_SECRET, {expiresIn: '7d'})
+          const {_id, email, name, role} = user
+          console.log('user info :', user);
+          return res.json({
+            token,
+            user:  {_id, email, name, role } // key=valu
+          })
+        })
+
+      }
+    })
+  }).catch(err =>{
+    res.json({
+      error: 'FACEbook login faild'
+    })
+  })
+
+
+
 }

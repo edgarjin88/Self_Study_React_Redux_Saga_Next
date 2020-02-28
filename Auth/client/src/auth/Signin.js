@@ -5,6 +5,8 @@ import axios from "axios";
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.min.css";
 import { authenticate, isAuth } from "./Helpers";
+import Google from "./Google";
+import Facebook from "./Facebook";
 
 
 const Signin = ({history}) => {
@@ -22,6 +24,15 @@ const Signin = ({history}) => {
     setValues({ ...values, [name]: e.target.value });
   };
 
+  const informParent = response =>{
+    console.log('inform par: ', response);
+            authenticate(response, () => {
+              isAuth() && isAuth().role === "admin"
+                ? history.push("/admin")
+                : history.push("/private");
+            });
+  }
+
   const handleSubmit = e => {
     e.preventDefault();
     setValues({ ...values, buttonText: "Submitting" });
@@ -35,6 +46,7 @@ const Signin = ({history}) => {
       .then(response => {
         console.log("signup success ", response);
         authenticate(response, ()=>{
+          
           setValues({
             ...values,
             name: "",
@@ -92,13 +104,20 @@ const Signin = ({history}) => {
   return (
     <Layout>
       <div className="col-md-6 offset-md-3">
-      {/* {JSON.stringify(isAuth())} */}
+        {/* {JSON.stringify(isAuth())} */}
         <ToastContainer />
-        {isAuth() ? <Redirect to="/"/> : null}
+        {isAuth() ? <Redirect to="/" /> : null}
         <h1 className="p-5 text-centered">Signin</h1>
         {signinForm()}
-        <br/>
-        <Link to="/auth/password/forgot" className="btn btn-sm btn-outline-danger">Forgot Password</Link>
+        <Google informParent={informParent} />
+        <Facebook informParent={informParent} />
+        <br />
+        <Link
+          to="/auth/password/forgot"
+          className="btn btn-sm btn-outline-danger"
+        >
+          Forgot Password
+        </Link>
       </div>
     </Layout>
   );

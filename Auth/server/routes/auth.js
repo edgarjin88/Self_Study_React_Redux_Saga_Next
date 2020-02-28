@@ -1,6 +1,14 @@
 const express = require('express'); 
 const router = express.Router()
-const { signup, signin, accountActivation, forgotPassword, resetPassword, googleLogin } = require("../controllers/auth");
+const {
+  signup,
+  signin,
+  accountActivation,
+  forgotPassword,
+  resetPassword,
+  googleLogin,
+  facebookLogin
+} = require("../controllers/auth");
 
  
 const {
@@ -24,5 +32,6 @@ router.post("/signin", userSignInValidator, runValidataion, signin);
 router.put("/forgot-password", forgotPasswordValidator, runValidataion, forgotPassword)
 router.put("/reset-password", resetPasswordValidator, runValidataion, resetPassword)
 router.post("/google-login", googleLogin)
+router.post("/facebook-login", facebookLogin)
 
 module.exports = router
